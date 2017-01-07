@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<extension version="3.6" type="plugin" group="vmpayment" method="upgrade">
+    <name>Mellat</name>
+    <author>Trangell</author>
+	<creationDate>Jan 2016</creationDate>
+	<copyright>Copyright 2016 Trangell Team</copyright>
+	<license>http://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU/GPL version 2</license>
+	<authorEmail>info@trangell.com</authorEmail>
+	<authorUrl>http://trangell.com</authorUrl>
+	<version>0.0.1</version>
+    <description>پلاگین پرداخت ملت برای ویرچومارت</description>
+
+    <files>
+        <filename plugin="mellat">mellat.php</filename>
+        <folder>helper</folder>
+        <folder>mellat</folder>
+    </files>
+
+    <vmconfig>
+        <fields name="params">
+            <fieldset name="payment"  addfieldpath="/administrator/components/com_virtuemart/fields">
+				<field name="melatuser" type="text" label="نام کاربری درگاه" default="" required="" />
+				<field name="melatpass" type="text" label="پسورد درگاه" default="" required="" />
+				<field name="melatterminalid" type="text" label="شناسه ترمینال" default="" required=""/>
+            </fieldset>
+        </fields>
+    </vmconfig>
+</extension>
