@@ -114,7 +114,7 @@ class plgVmPaymentMellat extends vmPSPlugin {
 			$response = explode(',', $response->return);
 			if ($response[0] != '0') { // if transaction fail
 				$msg = $this->getGateMsg($response[0]); 
-				$this->updateStatus ('U',0,$msg,$id); 
+				$this->updateStatus ('P',0,$msg,$id);  
 				$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 				$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 			}
@@ -142,7 +142,7 @@ class plgVmPaymentMellat extends vmPSPlugin {
 		}
 		catch(\SoapFault $e)  {
 			$msg= $this->getGateMsg('error');
-			$this->updateStatus ('U',0,$msg,$id);  
+			$this->updateStatus ('P',0,$msg,$id);  
 			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 		}
@@ -161,7 +161,7 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 			$app	= JFactory::getApplication();
 			$msg= $this->getGateMsg('notff'); 
 			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
-			$app->redirect($link, '<h2>'.$msg.'</h2>'.$virtuemart_order_id, $msgType='Error'); 
+			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 		}
 
 		$ResCode = $jinput->post->get('ResCode', '1', 'INT'); 
@@ -197,7 +197,7 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 					if ($ResCode == '17')
 						$this->updateStatus ('X',0,$msg,$id);
 					else 
-						$this->updateStatus ('U',0,$msg,$id); 
+						$this->updateStatus ('P',0,$msg,$id); 
 					$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 					$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 				}
@@ -219,7 +219,7 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 							if ($ResCode == '17')
 								$this->updateStatus ('X',0,$msg,$id);
 							else 
-								$this->updateStatus ('U',0,$msg,$id); 
+								$this->updateStatus ('P',0,$msg,$id); 
 							$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 							$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 						}
@@ -244,7 +244,7 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 								if ($ResCode == '17')
 									$this->updateStatus ('X',0,$msg,$id);
 								else 
-									$this->updateStatus ('U',0,$msg,$id); 
+									$this->updateStatus ('P',0,$msg,$id); 
 								$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 								$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 							}
@@ -252,7 +252,7 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 					}
 					catch(\SoapFault $e)  {
 						$msg= $this->getGateMsg('error'); 
-						$this->updateStatus ('U',0,$msg,$id); 
+						$this->updateStatus ('P',0,$msg,$id); 
 						$app	= JFactory::getApplication();
 						$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 						$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
@@ -261,7 +261,7 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 			}
 			else {
 				$msg= $this->getGateMsg('hck2'); 
-				$this->updateStatus ('U',0,$msg,$id); 
+				$this->updateStatus ('P',0,$msg,$id); 
 				$app	= JFactory::getApplication();
 				$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 				$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
@@ -269,7 +269,6 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 		}
 		else {	
 			$msg= $this->getGateMsg('notff');
-			$this->updateStatus ('U',0,$msg,$id); 
 			$app	= JFactory::getApplication();
 			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
