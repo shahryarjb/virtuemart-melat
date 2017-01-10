@@ -106,7 +106,7 @@ class plgVmPaymentMellat extends vmPSPlugin {
 			'localDate' => $dateTime->format('Ymd'),
 			'localTime' => $dateTime->format('His'),
 			'additionalData' => '',
-			'callBackUrl' => JURI::root().'index.php?option=com_virtuemart&view=pluginresponse&task=pluginresponsereceived',
+			'callBackUrl' => JURI::root().'index.php?option=com_virtuemart&view=pluginresponse&task=pluginresponsereceived&gid=1',
 			'payerId' => 0,
 		);
 		
@@ -154,124 +154,130 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 			require(VMPATH_ADMIN . DS . 'models' . DS . 'orders.php');
 		}
 		$app	= JFactory::getApplication();		
-		$jinput = JFactory::getApplication()->input;
-
-		$session = JFactory::getSession();
-		if ($session->isActive('uniq') && $session->get('uniq') != null) {
-			$cryptID = $session->get('uniq'); 
-		}
-		else {
-			$msg= $this->getGateMsg('notff'); 
-			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
-			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
-		}
-		$orderInfo = $this->getOrderInfo ($cryptID);
-		if ($orderInfo != null){
-			if (!($currentMethod = $this->getVmPluginMethod($orderInfo->virtuemart_paymentmethod_id))) {
+		$jinput = $app->input;
+		$gateway = $jinput->get->get('gid', '0', 'INT');
+		
+		if ($gateway == '1'){
+			$session = JFactory::getSession();
+			if ($session->isActive('uniq') && $session->get('uniq') != null) {
+				$cryptID = $session->get('uniq'); 
+			}
+			else {
+				$msg= $this->getGateMsg('notff'); 
+				$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
+				$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
+			}
+			$orderInfo = $this->getOrderInfo ($cryptID);
+			if ($orderInfo != null){
+				if (!($currentMethod = $this->getVmPluginMethod($orderInfo->virtuemart_paymentmethod_id))) {
+					return NULL; 
+				}			
+			}
+			else {
 				return NULL; 
-			}			
-		}
-		else {
-			return NULL; 
-		}
+			}
+			
+			$ResCode = $jinput->post->get('ResCode', '1', 'INT'); 
+			$SaleOrderId = $jinput->post->get('SaleOrderId', '1', 'INT'); 
+			$SaleReferenceId = $jinput->post->get('SaleReferenceId', '1', 'INT'); 
+			$RefId = $jinput->post->get('RefId', 'empty', 'STRING'); 
+			if (checkHack::strip($RefId) != $RefId )
+				$RefId = "illegal";
+			$CardNumber = $jinput->post->get('CardHolderPan', 'empty', 'STRING'); 
+			if (checkHack::strip($CardNumber) != $CardNumber )
+				$CardNumber = "illegal";
 		
-		$ResCode = $jinput->post->get('ResCode', '1', 'INT'); 
-		$SaleOrderId = $jinput->post->get('SaleOrderId', '1', 'INT'); 
-		$SaleReferenceId = $jinput->post->get('SaleReferenceId', '1', 'INT'); 
-		$RefId = $jinput->post->get('RefId', 'empty', 'STRING'); 
-		if (checkHack::strip($RefId) != $RefId )
-			$RefId = "illegal";
-		$CardNumber = $jinput->post->get('CardHolderPan', 'empty', 'STRING'); 
-		if (checkHack::strip($CardNumber) != $CardNumber )
-			$CardNumber = "illegal";
-	
-		
-		$salt = $orderInfo->salt;
-		$id = $orderInfo->virtuemart_order_id;
-		$uId = $cryptID.':'.$salt;
-		
-		$order_id = $orderInfo->order_number; 
-		//$mobile = $orderInfo->mobile; 
-		$payment_id = $orderInfo->virtuemart_paymentmethod_id; 
-		$pass_id = $orderInfo->order_pass;
-		$method = $this->getVmPluginMethod ($payment_id);
-		
-		if (JUserHelper::verifyPassword($id , $uId)) {
-			if (
-				checkHack::checkNum($ResCode) &&
-				checkHack::checkNum($SaleOrderId) &&
-				checkHack::checkNum($SaleReferenceId) 
-			){
-				if ($ResCode != '0') {
-					$msg= $this->getGateMsg($ResCode); 
-					if ($ResCode == '17')
-						$this->updateStatus ('X',0,$msg,$id);
-					$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
-					$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
-				}
-				else {
-					$fields = array(
-						'terminalId' => $method->melatterminalid,
-						'userName' => $method->melatuser,
-						'userPassword' => $method->melatpass,
-						'orderId' => $SaleOrderId, 
-						'saleOrderId' =>  $SaleOrderId, 
-						'saleReferenceId' => $SaleReferenceId
-					);
-					try {
-						$soap = new SoapClient('https://bpm.shaparak.ir/pgwchannel/services/pgw?wsdl');
-						$response = $soap->bpVerifyRequest($fields);
+			
+			$salt = $orderInfo->salt;
+			$id = $orderInfo->virtuemart_order_id;
+			$uId = $cryptID.':'.$salt;
+			
+			$order_id = $orderInfo->order_number; 
+			//$mobile = $orderInfo->mobile; 
+			$payment_id = $orderInfo->virtuemart_paymentmethod_id; 
+			$pass_id = $orderInfo->order_pass;
+			$method = $this->getVmPluginMethod ($payment_id);
+			
+			if (JUserHelper::verifyPassword($id , $uId)) {
+				if (
+					checkHack::checkNum($ResCode) &&
+					checkHack::checkNum($SaleOrderId) &&
+					checkHack::checkNum($SaleReferenceId) 
+				){
+					if ($ResCode != '0') {
+						$msg= $this->getGateMsg($ResCode); 
+						if ($ResCode == '17')
+							$this->updateStatus ('X',0,$msg,$id);
+						$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
+						$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
+					}
+					else {
+						$fields = array(
+							'terminalId' => $method->melatterminalid,
+							'userName' => $method->melatuser,
+							'userPassword' => $method->melatpass,
+							'orderId' => $SaleOrderId, 
+							'saleOrderId' =>  $SaleOrderId, 
+							'saleReferenceId' => $SaleReferenceId
+						);
+						try {
+							$soap = new SoapClient('https://bpm.shaparak.ir/pgwchannel/services/pgw?wsdl');
+							$response = $soap->bpVerifyRequest($fields);
 
-						if ($response->return != '0') {
-							$msg= $this->getGateMsg($response->return); 
-							if ($ResCode == '17')
-								$this->updateStatus ('X',0,$msg,$id);
-							$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
-							$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
-						}
-						else {	
-							$response = $soap->bpSettleRequest($fields);
-							if ($response->return == '0' || $response->return == '45') {
+							if ($response->return != '0') {
 								$msg= $this->getGateMsg($response->return); 
-								$html = $this->renderByLayout('mellat_payment', array(
-									'order_number' =>$order_id,
-									'order_pass' =>$pass_id,
-									'tracking_code' => $SaleReferenceId,
-									'status' => $msg
-								));
-								$this->updateStatus ('C',1,$msg,$id);
-								$this->updateOrderInfo ($id,$SaleReferenceId,$CardNumber);
-								vRequest::setVar ('html', $html);
-								$session->clear('uniq'); 
-								$cart = VirtueMartCart::getCart();
-								$cart->emptyCart();
-							}
-							else {
-								$msg= $this->getGateMsg($response->return);
 								if ($ResCode == '17')
 									$this->updateStatus ('X',0,$msg,$id);
 								$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 								$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 							}
+							else {	
+								$response = $soap->bpSettleRequest($fields);
+								if ($response->return == '0' || $response->return == '45') {
+									$msg= $this->getGateMsg($response->return); 
+									$html = $this->renderByLayout('mellat_payment', array(
+										'order_number' =>$order_id,
+										'order_pass' =>$pass_id,
+										'tracking_code' => $SaleReferenceId,
+										'status' => $msg
+									));
+									$this->updateStatus ('C',1,$msg,$id);
+									$this->updateOrderInfo ($id,$SaleReferenceId,$CardNumber);
+									vRequest::setVar ('html', $html);
+									$session->clear('uniq'); 
+									$cart = VirtueMartCart::getCart();
+									$cart->emptyCart();
+								}
+								else {
+									$msg= $this->getGateMsg($response->return);
+									if ($ResCode == '17')
+										$this->updateStatus ('X',0,$msg,$id);
+									$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
+									$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
+								}
+							}
+						}
+						catch(\SoapFault $e)  {
+							$msg= $this->getGateMsg('error'); 
+							$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
+							$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 						}
 					}
-					catch(\SoapFault $e)  {
-						$msg= $this->getGateMsg('error'); 
-						$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
-						$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
-					}
+				}
+				else {
+					$msg= $this->getGateMsg('hck2'); 
+					$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
+					$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 				}
 			}
-			else {
-				$msg= $this->getGateMsg('hck2'); 
+			else {	
+				$msg= $this->getGateMsg('notff');
 				$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 				$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 			}
 		}
-		else {	
-			$msg= $this->getGateMsg('notff');
-			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
-			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
+		else {
+			return NULL;
 		}
 	}
 
