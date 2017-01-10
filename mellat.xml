@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="3.6" type="plugin" group="vmpayment" method="upgrade">
-    <name>Mellat</name>
+    <name>Trangell - Mellat</name>
     <author>Trangell</author>
 	<creationDate>Jan 2016</creationDate>
 	<copyright>Copyright 2016 Trangell Team</copyright>
