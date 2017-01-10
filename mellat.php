@@ -71,7 +71,6 @@ class plgVmPaymentMellat extends vmPSPlugin {
 			return NULL; 
 		}
 		
-
 		$session = JFactory::getSession();
 		$salt = JUserHelper::genRandomPassword(32);
 		$crypt_virtuemartPID = JUserHelper::getCryptedPassword($order['details']['BT']->virtuemart_order_id, $salt);
@@ -145,7 +144,6 @@ class plgVmPaymentMellat extends vmPSPlugin {
 		}
 		catch(\SoapFault $e)  {
 			$msg= $this->getGateMsg('error');
-			$this->updateStatus ('P',0,$msg,$id);  
 			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 		}
@@ -159,12 +157,10 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 		$jinput = JFactory::getApplication()->input;
 
 		$session = JFactory::getSession();
-		if ($session->isActive('uniq')) {
+		if ($session->isActive('uniq') && $session->get('uniq') != null) {
 			$cryptID = $session->get('uniq'); 
-			
 		}
 		else {
-			$app	= JFactory::getApplication();
 			$msg= $this->getGateMsg('notff'); 
 			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
@@ -198,7 +194,6 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 		//$mobile = $orderInfo->mobile; 
 		$payment_id = $orderInfo->virtuemart_paymentmethod_id; 
 		$pass_id = $orderInfo->order_pass;
-		//$price = round($orderInfo->amount,5);
 		$method = $this->getVmPluginMethod ($payment_id);
 		
 		if (JUserHelper::verifyPassword($id , $uId)) {
@@ -247,9 +242,9 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 								$this->updateStatus ('C',1,$msg,$id);
 								$this->updateOrderInfo ($id,$SaleReferenceId,$CardNumber);
 								vRequest::setVar ('html', $html);
+								$session->clear('uniq'); 
 								$cart = VirtueMartCart::getCart();
 								$cart->emptyCart();
-								$session->clear('uniq'); 
 							}
 							else {
 								$msg= $this->getGateMsg($response->return);
@@ -262,7 +257,6 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 					}
 					catch(\SoapFault $e)  {
 						$msg= $this->getGateMsg('error'); 
-						$app	= JFactory::getApplication();
 						$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 						$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 					}
@@ -270,14 +264,12 @@ public function plgVmOnPaymentResponseReceived(&$html) {
 			}
 			else {
 				$msg= $this->getGateMsg('hck2'); 
-				$app	= JFactory::getApplication();
 				$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 				$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 			}
 		}
 		else {	
 			$msg= $this->getGateMsg('notff');
-			$app	= JFactory::getApplication();
 			$link = JRoute::_(JUri::root().'index.php/component/virtuemart/cart',false);
 			$app->redirect($link, '<h2>'.$msg.'</h2>', $msgType='Error'); 
 		}
